@@ -210,14 +210,14 @@ def rotate(angle):
 #              if instead of '', enter 'r' to generate random amino acid sequences
 #                                          still needs the assign_input and speed_input fields
 #
-#       assign_input: name of assignment file, inside the "assignments" folder. only needed for 'a' and ''
+#       assign_input: name of assignment file, inside the "assignments" folder. (only needed for 'a' and '')
 #
 #       speed_input: value of pause speed, to watch the amino acid be drawn. 0 to not pause at all
 #
 #       sample_input: either the name of the sample for 's' or FASTA file name path for ''
 def turtle_main(command_input, assign_input, speed_input, sample_input):
 
-    if command_input == "s" or command_input == "S":
+    if command_input == "s":
         # run for each assignment
         for i in range(1,10):
             ind = str(i)
@@ -243,7 +243,7 @@ def turtle_main(command_input, assign_input, speed_input, sample_input):
 
             ax.clear()
 
-    elif command_input == "a" or command_input == "A":
+    elif command_input == "a":
 
         aminoassign(assign_input)
 
@@ -282,7 +282,10 @@ if __name__ == '__main__':
             'To do all samples for one assignment, enter "a", '
             'To do all assignments for one sample, enter "s"\n')
 
-    assign = input("Enter amino acid assignment file in assignments/ folder (a,''):\n")
+    if command == "a" or command != "s":    # (a,'')
+        assign = input("Enter amino acid assignment file in assignments/ folder:\n")
+    else:
+        assign = ""
 
     speed = input("Enter pause speed of plot (recommended 0.1-0.01) (if needed):\n")
     if speed == "":
@@ -290,6 +293,11 @@ if __name__ == '__main__':
     else:
         speed = float(speed)
 
-    sample = input('Enter the sample name (s)/FASTA file name path ('')\n')
+    if command == "s":
+        sample = input('Enter the sample name (s)\n')
+    elif command != "a":
+        sample = input('Enter the FASTA file name path ('')\n')
+    else:
+        sample = ""
 
     turtle_main(command, assign, speed, sample)
