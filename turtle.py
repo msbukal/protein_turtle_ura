@@ -6,30 +6,28 @@ from pylab import *
 import random
 import os.path
 
-# beginning global stuff
+# instead of tracing back on itself, turn by a factor of "turn" (potentially try other values?)
 turn = 1
 
 # display 3D plot base
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
-# aa_num: # of amino acid -> letter of amino acid
+# aa_num: a[#] = amino acid letter (# of amino acid -> letter of amino acid)
 aa_num = []
-# num_loc: # of amino acid -> location of amino acid
+# num_loc: a[#] = location of amino acid face (# of amino acid -> location of amino acid face)
 num_loc = []
-# Dictionary of Colours
+
+# Dictionary of Colours REMAINS CONSTANT FOR ALL RUNS
 aa_col = {}
-
-# face colours
-f_col = open("colours_locations", "r")
-next(f_col)
-
+# taking in face colours for each amino acid (remains constant at all times)
+f_col = open("colours_locations", "r"); next(f_col)
 for i in range(0, 20):
     col_amino = f_col.readline().split(' ')
     aa_col[col_amino[0]] = col_amino[1]  # take in colour assignment from file
-
 f_col.close()
 
+# names for relative fasta files
 fasta_files = {"a3c8": "samples/a3c8/5SV4_A.fasta.txt", "a3d": "samples/a3d/2A3D_A.fasta.txt",
                "albumin": "samples/albumin/1AO6_A.fasta.txt", "apo": "samples/apo/1AKP_A.fasta.txt",
                "fv": "samples/fv/1AP2_A.fasta.txt", "insulin": "samples/insulin/2LWZ_A.fasta.txt",
@@ -50,9 +48,12 @@ class Vector:
                       self.y + other.y,
                       self.z + other.z)
 
-#  ########################## Reading in information from file assignments.txt
+# aminoassign: reads in amino assignment from file in /assignments/assign_input
+# updates global aa_num and num_loc
 def aminoassign(assign_file):
     global aa_num, num_loc
+
+    # reset to 0's
     aa_num = [0] * 20
     num_loc = [0] * 20
 
@@ -67,7 +68,7 @@ def aminoassign(assign_file):
     for i in range(23):
         next(f_loc)
 
-    #  ########################## read in aa_loc values from files
+    #  read in aa_loc values from files
     for i in range(0, 20):
         cur_amino = f_assign.readline().split()[0]  # take in aa assignment from file
         loc = [float(x) for x in f_loc.readline().split()]  # take in face location from file
@@ -80,14 +81,16 @@ def aminoassign(assign_file):
     f_assign.close()
     f_loc.close()
 
-#  ##########################
-# plots the amino acid sequence using icosahedron approach
+
+# plot_sequence: plots the amino acid sequence using icosahedron approach
 #   seq: some iterable structure of strings of valid amino acids according to face_assignments.txt
-#   centre: the centre plotting should begin at, usually Vector(0,0,0)
+#   centre: the centre plotting should begin at, usually Vector(0,0,0) for first run
 #   speed: speed to draw at, =0 if want to skip draw
 #
+#   if the last amino acid face number + the current amino acid = 19, they are on opposite faces of the shape
+#       this would cause a weird shape, therefore preforms a slight turn
+#
 #   returns: the position of the last amino acid
-#  ##########################
 def plot_sequence(seq, centre, prev_face, speed):
 
     for amino in seq:
@@ -97,7 +100,7 @@ def plot_sequence(seq, centre, prev_face, speed):
             print("**********ERROR '" + amino + "' is not a valid amino acid and is skipped")
             continue
 
-        #  ########################## if opposite amino acids, make a dip before turning back around
+        # if opposite amino acids, make a dip before turning back around
         if (face + prev_face) == 19:
             turn_vec = Vector(centre.x, centre.y + turn, centre.z)
 
@@ -107,7 +110,6 @@ def plot_sequence(seq, centre, prev_face, speed):
                      aa_col[amino])
 
             centre = turn_vec
-        #  ##########################
 
         new = centre + num_loc[face]
 
@@ -116,6 +118,7 @@ def plot_sequence(seq, centre, prev_face, speed):
                  [centre.z, new.z],
                  aa_col[amino])  # plot previous centre to new amino acid, according to amino acid colour
 
+        # pause speed if needed (not 0)
         if speed:
             draw()  # draw the line
             pause(speed)  # at this speed? or for this amount of time? something, causes delay. smaller = faster
@@ -123,29 +126,32 @@ def plot_sequence(seq, centre, prev_face, speed):
         centre = new
         prev_face = face
 
-        #print(amino)
-        #a = input()
-
     return [centre, prev_face]
 
 
+# plotform: takes in the format and the speed and runs one instance of the turtle algortihm
+#
+#       form: can be 'c', 'r' or else (file name)
+#           'c': command line input of sequence, for quick tests
+#           'r': generates random sequence and plots it
+#           else: preforms on sequence given in fasta file name: ** NOTE ** skips first line for description of file
+#
+#       plots a green diamond at the initial position and a red diamond at the final position
 def plotform(form, speed):
 
-    if form == 'q' or form == 'Q':  # Quit
-        exit()
-
+    # Initial Position
     plt.plot([0], [0], [0], 'gD')  # plot start position of sequence: GREEN DIAMOND
 
     prev_face_default = -1
     centre_default = Vector(0, 0, 0)
 
-    #  ########################## Command Line Input
+    #  Command Line Input
     if form == 'c' or form == 'C':
         sequence = input("Enter protein sequence\n")
         plt.title(sequence)
         final = plot_sequence(sequence, centre_default, prev_face_default, speed)[0]
 
-    #  ########################## Random Input
+    #  Random Input
     elif form == 'r' or form == 'R':
         n = input("Enter number of random amino acids\n")
         sequence = ""
@@ -158,18 +164,18 @@ def plotform(form, speed):
         plt.title("random input")
         final = plot_sequence(sequence, centre_default, prev_face_default, speed)[0]
 
-    #  ########################## Filename Input
-    else:  # filename
+    #  Filename Input
+    else:
         try:
             sequence = open(form, "r")
         except FileNotFoundError:
             print("**********ERROR: Filename incorrect")
             exit()
 
-        # plt.title(form)
-        sequence.readline()
+        sequence.readline()  # skip first line
         result = [centre_default, prev_face_default]
 
+        # plot each line in the file
         for line in sequence:
             result = plot_sequence(line.strip('\n'), centre_default, prev_face_default, speed)
             centre_default = result[0]
@@ -177,7 +183,7 @@ def plotform(form, speed):
 
         final = result[0]
 
-    # Final plot
+    # Final position
     plt.plot([final.x], [final.y], [final.z], 'rD')  # plot final position of sequence: RED DIAMOND
 
 
@@ -186,69 +192,104 @@ def rotate(angle):
     ax.view_init(azim=angle)
 
 
-#  ########################## Main
+#  turtle_main: runs the main turtle generation algorithm
+#
+#        command_input: 's', 'a', or ''
+#          s: does all the assignments (1-9 in /assignments) for one sample,
+#                  according to the name given in sample_input
+#                  this won't display the images, and will create rotating gif images in samples/sample_input
+#          a: does all the samples (in the /samples folder,
+#                  according to global "fasta_files" dictionary on the assignment given in assign_input
+#                  this won't display the images, and will create a folder assign_input/ to put the rotating gif images
+#          '': to run one sample and display the graph in python,
+#                  needs the assignment file (assign_input) with default 1,
+#                  needs the pause speed with default 0,
+#                  needs the fasta_file path in sample_input with default "sequence"
+#              if instead of '', enter 'c' for command line input (enter sequence on command line) for quick tests
+#                                          still needs the assign_input and speed_input fields
+#              if instead of '', enter 'r' to generate random amino acid sequences
+#                                          still needs the assign_input and speed_input fields
+#
+#       assign_input: name of assignment file, inside the "assignments" folder. only needed for 'a' and ''
+#
+#       speed_input: value of pause speed, to watch the amino acid be drawn. 0 to not pause at all
+#
+#       sample_input: either the name of the sample for 's' or FASTA file name path for ''
 def turtle_main(command_input, assign_input, speed_input, sample_input):
 
-    if command_input == "s":
-
+    if command_input == "s" or command_input == "S":
+        # run for each assignment
         for i in range(1,10):
             ind = str(i)
             print("working on number "+ind)
 
             assign_input = ind
+
+            # create path to save at, skip if already exists (no need to replace)
             file_name = ("samples/" + sample_input + "/" + assign_input + "_" + sample_input + ".gif")
             if(os.path.exists(file_name)):
                 print("already done number " + ind)
                 continue
 
-            # RUN PROGRAM
+            # create assignment, run plot
             aminoassign(assign_input)
             plotform(fasta_files[sample_input], speed_input)
 
+            # save 3d rotation of plot in gif format
             rot_animation = animation.FuncAnimation(fig, rotate, frames=np.arange(0,362,2), interval=100)
             rot_animation.save(file_name, dpi=80, writer='imagemagick')
+
             print("done number "+ind)
 
             ax.clear()
 
-    elif command_input == "a":
+    elif command_input == "a" or command_input == "A":
 
         aminoassign(assign_input)
 
         for i in fasta_files:
             print("working on " + i)
-            file_name = (assign_input + '/' + i + ".gif")
 
+            # create path to save at, skip if already exists (no need to replace)
+            file_name = (assign_input + '/' + i + ".gif")
             if (os.path.exists(file_name)):
                 print("already done " + i)
                 continue
 
-            # RUN PROGRAM
+            # create assignment, run plot
             plotform(fasta_files[i], speed_input)
 
+            # save 3d rotation of plot in gif format
             rot_animation = animation.FuncAnimation(fig, rotate, frames=np.arange(0, 362, 2), interval=100)
             rot_animation.save(file_name, dpi=80, writer='imagemagick')
             print("done " + i)
 
             ax.clear()
-    else:
+
+    else: # nothing, C or R. simple: just one run
 
         # RUN PROGRAM
-        aminoassign(assign_input)
-        plotform(sample_input, speed_input)
-        plt.show()
+        aminoassign(assign_input)  # generate amino assignment
+        plotform(sample_input, speed_input)  # plot
+        plt.show()  # show
         ax.clear()
 
-# taking in user input
+
+# taking in user input, only if this is the main (so runtest can run).
+# description of the input can be found above turtle_main(...)
 if __name__ == '__main__':
     command = input('For user control, input nothing\n'
             'To do all samples for one assignment, enter "a", '
             'To do all assignments for one sample, enter "s"\n')
+
     assign = input("Enter amino acid assignment file in assignments/ folder (a,''):\n")
+
     speed = input("Enter pause speed of plot (recommended 0.1-0.01) (if needed):\n")
     if speed == "":
         speed = 0
     else:
         speed = float(speed)
+
     sample = input('Enter the sample name (s)/FASTA file name path ('')\n')
+
     turtle_main(command, assign, speed, sample)
