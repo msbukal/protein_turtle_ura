@@ -81,16 +81,20 @@ def find_centroids(print_cen, plot_coord):
         c = centroid(v1, v2, v3)
 
         if print_cen:
+            #print(c.x)
+            #print(c.y)
+            #print(c.z)
             print(c.x, c.y, c.z)
 
         if plot_coord:
             # labels the faces with numbers in a red box
             #plt.plot([0,c.x], [0,c.y], [0,c.z])  # if want to have line from centre to face
-            t = ax.text(c.x*1.3, c.y*1.3, c.z*1.3, i, color='white')
-            t.set_bbox(dict(facecolor='red', alpha=0.5, edgecolor='red'))
+            #t = ax.text(c.x*1.3, c.y*1.3, c.z*1.3, i, color='white')
+            #t.set_bbox(dict(facecolor='red', alpha=0.5, edgecolor='red'))
             i = i + 1
 
 
+# plots an icosahedron in 3D with the corresponding faces
 def plot_ico():
 
     verts = []  # Going to be array of all vertices per face, to plot them
@@ -115,7 +119,7 @@ def plot_ico():
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
-# find_centroids(1, 0)  # if want to print out the locations of face centroids
+#find_centroids(1, 0)  # if want to print out the locations of face centroids
 find_centroids(0, 1)
 plot_ico()
 
@@ -128,5 +132,3 @@ ax.set_ylabel("Y")
 ax.set_zlabel("Z")
 
 plt.show()
-
-index={}

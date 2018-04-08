@@ -205,9 +205,9 @@ def rotate(angle):
 #                  needs the assignment file (assign_input) with default 1,
 #                  needs the pause speed with default 0,
 #                  needs the fasta_file path in sample_input with default "sequence"
-#              if instead of '', enter 'c' for command line input (enter sequence on command line) for quick tests
+#              if enter 'c' for the fasta file path, can enter command line input for quick tests
 #                                          still needs the assign_input and speed_input fields
-#              if instead of '', enter 'r' to generate random amino acid sequences
+#              if enter 'r' for fasta file path, generates random amino acid sequences
 #                                          still needs the assign_input and speed_input fields
 #
 #       assign_input: name of assignment file, inside the "assignments" folder. (only needed for 'a' and '')
